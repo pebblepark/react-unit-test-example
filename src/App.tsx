@@ -1,6 +1,10 @@
 import './App.css';
 import logo from './logo.svg';
 
+export function add(a: number, b: number) {
+  return a + b;
+}
+
 function App() {
   return (
     <div className="App">
