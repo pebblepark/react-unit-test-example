@@ -1,46 +1,134 @@
-# Getting Started with Create React App
+# Jest, React 및 Typescript를 사용한 단위 테스트
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+https://ykss.netlify.app/translation/unit-testing-with-jest-react-and-typescript/?utm_source=substack&utm_medium=email
 
-## Available Scripts
+- App.tsx
 
-In the project directory, you can run:
+```tsx
+import './App.css';
+import logo from './logo.svg';
 
-### `npm start`
+export function add(a: number, b: number) {
+  return a + b;
+}
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+export function Login() {
+  return (
+    <div>
+      <div>
+        <input type="email" name="email" placeholder="email" />
+      </div>
+      <div>
+        <input type="password" name="password" placeholder="password" />
+      </div>
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+      <div>
+        <button type="button">Sign In</button>
+        <button type="button">Sign Up</button>
+      </div>
+    </div>
+  );
+}
 
-### `npm test`
+// create-react-app 기존 제공 App.tsx 코드
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
+        <p>
+          Edit <code>src/App.tsx</code> and save to reload.
+        </p>
+        <a
+          className="App-link"
+          href="https://reactjs.org"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Learn React
+        </a>
+      </header>
+    </div>
+  );
+}
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+export default App;
+```
 
-### `npm run build`
+- App.test.tsx
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```tsx
+import { render, screen } from '@testing-library/react';
+import ReactDOM from 'react-dom';
+import App, { add, Login } from './App';
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+// create-react-app 제공 기본 테스트 코드
+test('renders learn react link', () => {
+  // Arrange: 테스트 환경과 컴포넌트 렌더링 준비
+  render(<App />);
+  // Act: 예상되는 링크 찾기
+  const linkElement = screen.getByText(/learn react/i);
+  // Assert: 문서에 해당 링크가 있는지 확인
+  expect(linkElement).toBeInTheDocument();
+});
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+describe('add function', () => {
+  describe('when given to integers', () => {
+    it('should return a add result', () => {
+      // 준비(Arrange)
+      // 예상되는 덧셈 결과와 함수 인수 준비
+      const [a, b, expected] = [5, 8, 13];
 
-### `npm run eject`
+      // 실행(Act)
+      // 함수 결과를 얻기 위해 add 함수 사용
+      const result = add(a, b);
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+      // 검증(Assert)
+      // 함수의 출력과 예상 결과 비교
+      expect(result).toEqual(expected);
+    });
+  });
+});
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+describe('Login component tests', () => {
+  let container: HTMLDivElement;
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+  // beforeEach : 이 파일의 각 테스트가 실행되기 전에 해당 함수 실행
+  // 함수가 promise를 반환하거나 생성자인 경우, jest는 테스트를 실행하기 전에 해당 promise가 해결될 때까지 대기
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    // eslint-disable-next-line testing-library/no-render-in-setup
+    ReactDOM.render(<Login />, container);
+  });
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+  // afterEach : 테스트가 서로 방해되지 않도록 각 테스트가 마무리 되었을 때 초기화
+  afterEach(() => {
+    document.body.removeChild(container);
+    container.remove();
+  });
 
-## Learn More
+  // 각 입력 필드 렌더링 테스트
+  it('Renders all input fields correctly', () => {
+    // 입력 필드 선택
+    // eslint-disable-next-line testing-library/no-node-access
+    const inputs = container.querySelectorAll('input');
+    // 입력 필드 올바르게 렌더링 되었는지 확인
+    expect(inputs).toHaveLength(2);
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+    // 첫 번째, 두 번째 입력 필드 이름이 각각 '이메일', '비밀번호' 인지 확인
+    expect(inputs[0].name).toBe('email');
+    expect(inputs[1].name).toBe('password');
+  });
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+  // 각 버튼 렌더링 테스트
+  it('Renders all buttons correctly', () => {
+    // eslint-disable-next-line testing-library/no-node-access
+    const buttons = container.querySelectorAll('button');
+    expect(buttons).toHaveLength(2);
+
+    expect(buttons[0].type).toBe('button');
+    expect(buttons[1].type).toBe('button');
+  });
+});
+```
